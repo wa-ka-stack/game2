@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เกมทายรหัสไปรษณีย์ 🇹🇭</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Prompt', sans-serif; 
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        /* ธีมขอบซองจดหมายไปรษณีย์ (Airmail Envelope) */
+        .airmail-border {
+            position: relative;
+            background: #ffffff;
+        }
+        .airmail-border::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 0;
+            background: repeating-linear-gradient(
+                -45deg,
+                #ED1C24, #ED1C24 20px,
+                #ffffff 20px, #ffffff 40px,
+                #0F204B 40px, #0F204B 60px,
+                #ffffff 60px, #ffffff 80px
+            );
+            border-radius: 0.75rem;
+        }
+        .airmail-inner {
+            position: relative;
+            z-index: 1;
+            background: white;
+            margin: 8px; /* ความหนาของขอบซอง */
+            border-radius: 0.5rem;
+            height: calc(100% - 16px);
+            display: flex;
+            flex-direction: column;
+        }
+        .btn-choice {
+            transition: all 0.2s ease;
+        }
+        .btn-choice:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .correct {
+            background-color: #10B981 !important;
+            color: white !important;
+            border-color: #10B981 !important;
+        }
+        .wrong {
+            background-color: #EF4444 !important;
+            color: white !important;
+            border-color: #EF4444 !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Container หลัก -->
+    <div class="w-full max-w-lg h-[600px] airmail-border shadow-2xl">
+        <div class="airmail-inner p-6">
+            
+            <!-- Header (Logo) -->
+            <div class="flex items-center justify-center space-x-3 mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-[#ED1C24]" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                </svg>
+                <h1 class="text-2xl font-bold text-[#0F204B]">ไปรษณีย์<span class="text-[#ED1C24]">ทายใจ</span></h1>
+            </div>
+
+            <!-- หน้าเมนูหลัก -->
+            <div id="menu-screen" class="flex-1 flex flex-col justify-center items-center text-center space-y-6">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-800">เกมทดสอบความจำรหัสไปรษณีย์</h2>
+                    <p class="text-gray-500 mt-2 text-sm">แบ่งเป็น 2 ชุด ชุดละ 24 ข้อ (ไม่ซ้ำกัน)</p>
+                </div>
+                
+                <div class="w-full space-y-4 px-4">
+                    <button onclick="startGame(1)" class="w-full py-4 bg-[#ED1C24] text-white rounded-lg font-medium text-lg hover:bg-red-700 transition shadow-md">
+                        📮 เล่นชุดที่ 1<br><span class="text-sm font-normal text-red-100">(กทม. ชั้นใน - สมุทรปราการ)</span>
+                    </button>
+                    <button onclick="startGame(2)" class="w-full py-4 bg-[#0F204B] text-white rounded-lg font-medium text-lg hover:bg-blue-900 transition shadow-md">
+                        📦 เล่นชุดที่ 2<br><span class="text-sm font-normal text-blue-200">(กทม. รอบนอก - นนทบุรี - ปทุมธานี)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- หน้าเล่นเกม -->
+            <div id="game-screen" class="flex-1 flex flex-col hidden">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b-2 border-gray-100">
+                    <span id="question-counter" class="text-sm font-medium text-gray-500">ข้อที่ 1/24</span>
+                    <span class="text-sm font-medium text-[#ED1C24]">คะแนน: <span id="score-display">0</span></span>
+                </div>
+
+                <div class="flex-1 flex flex-col justify-center">
+                    <div class="text-center mb-8">
+                        <h3 id="question-text" class="text-2xl font-semibold text-gray-800 leading-snug">
+                            รหัสไปรษณีย์ของ พลับพลาไชย คืออะไร?
+                        </h3>
+                    </div>
+
+                    <div id="choices-container" class="grid grid-cols-1 gap-3">
+                        <!-- ปุ่มตัวเลือกจะถูกสร้างด้วย JavaScript -->
+                    </div>
+                    
+                    <!-- ปุ่มถัดไป (ซ่อนไว้จนกว่าจะตอบ) -->
+                    <div id="next-button-container" class="mt-6 hidden">
+                        <button onclick="nextQuestion()" class="w-full py-3 bg-[#0F204B] text-white rounded-lg font-medium text-lg hover:bg-blue-900 transition shadow-md">
+                            ถัดไป ➡️
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- หน้าสรุปผล -->
+            <div id="result-screen" class="flex-1 flex flex-col justify-center items-center text-center hidden space-y-6">
+                <div class="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">ส่งพัสดุสำเร็จ!</h2>
+                    <p class="text-gray-500 mt-2">คุณทำคะแนนได้</p>
+                    <p class="text-5xl font-bold text-[#ED1C24] mt-2"><span id="final-score">0</span><span class="text-2xl text-gray-500">/24</span></p>
+                </div>
+                
+                <button onclick="showMenu()" class="w-full max-w-xs py-3 mt-4 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition">
+                    กลับหน้าหลัก
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const allData = [
+            // ชุดที่ 1 (Index 0-23)
+            {name: "พลับพลาไชย", code: "10100"}, {name: "ราชดำเนิน", code: "10200"}, {name: "ดุสิต", code: "10300"},
+            {name: "สามเสนใน", code: "10400"}, {name: "บางรัก", code: "10500"}, {name: "สำเหร่", code: "10600"},
+            {name: "บางกอกน้อย", code: "10700"}, {name: "บางซื่อ", code: "10800"}, {name: "จตุจักร", code: "10900"},
+            {name: "พระโขนง", code: "10110"}, {name: "ยานนาวา", code: "10120"}, {name: "พระประแดง", code: "10130"},
+            {name: "ราษฎร์บูรณะ", code: "10140"}, {name: "บางขุนเทียน", code: "10150"}, {name: "ภาษีเจริญ", code: "10160"},
+            {name: "ตลิงชัน", code: "10170"}, {name: "หลักสี่", code: "10210"}, {name: "รามอินทรา", code: "10220"},
+            {name: "จรเข้บัว", code: "10230"}, {name: "คลองจั่น", code: "10240"}, {name: "อ่อนนุช", code: "10250"},
+            {name: "บางนา", code: "10260"}, {name: "สมุทรปราการ", code: "10270"}, {name: "บางปู", code: "10280"},
+            
+            // ชุดที่ 2 (Index 24-47)
+            {name: "พระสมุทรเจดีย์", code: "10290"}, {name: "ลาดพร้าว", code: "10310"}, {name: "รองเมือง", code: "10330"},
+            {name: "มีนบุรี", code: "10510"}, {name: "ลาดกระบัง", code: "10520"}, {name: "หนองจอก", code: "10530"},
+            {name: "บางพลี", code: "10540"}, {name: "คลองด่าน", code: "10550"}, {name: "บางบ่อ", code: "10560"},
+            {name: "บางเสาธง", code: "10570"}, {name: "นนทบุรี", code: "11000"}, {name: "บางบัวทอง", code: "11110"},
+            {name: "ปากเกร็ด", code: "11120"}, {name: "บางกรวย", code: "11130"}, {name: "บางใหญ่", code: "11140"},
+            {name: "ไทรน้อย", code: "11150"}, {name: "ปทุมธานี", code: "12000"}, {name: "ธัญบุรี", code: "12110"},
+            {name: "คลองหลวง", code: "12120"}, {name: "รังสิต", code: "12130"}, {name: "ลาดหลุมแก้ว", code: "12140"},
+            {name: "ลำลูกกา", code: "12150"}, {name: "สามโคก", code: "12160"}, {name: "หนองเสือ", code: "12170"}
+        ];
+
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isAskCode = true;
+        let currentFullSet = [];
+
+        function startGame(setNumber) {
+            if (setNumber === 1) {
+                currentFullSet = allData.slice(0, 24);
+            } else {
+                currentFullSet = allData.slice(24, 48);
+            }
+
+            currentQuestions = [...currentFullSet].sort(() => 0.5 - Math.random());
+            currentQuestionIndex = 0;
+            score = 0;
+
+            document.getElementById('menu-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('game-screen').classList.add('flex');
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            updateHeader();
+            
+            const currentItem = currentQuestions[currentQuestionIndex];
+            isAskCode = Math.random() > 0.5;
+
+            const qText = document.getElementById('question-text');
+            if (isAskCode) {
+                qText.innerHTML = `รหัสไปรษณีย์ของ <br><span class="text-[#ED1C24]">'${currentItem.name}'</span><br> คืออะไร?`;
+            } else {
+                qText.innerHTML = `รหัสไปรษณีย์ <span class="text-[#ED1C24]">'${currentItem.code}'</span><br> คือที่ทำการใด?`;
+            }
+
+            let choices = [currentItem];
+            let distractors = currentFullSet.filter(item => item.code !== currentItem.code);
+            distractors.sort(() => 0.5 - Math.random());
+            choices = choices.concat(distractors.slice(0, 3));
+            choices.sort(() => 0.5 - Math.random());
+
+            const choicesContainer = document.getElementById('choices-container');
+            choicesContainer.innerHTML = '';
+
+            // ซ่อนปุ่มถัดไปเมื่อโหลดคำถามใหม่
+            document.getElementById('next-button-container').classList.add('hidden');
+
+            choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-choice w-full py-3 px-4 bg-white border-2 border-gray-200 text-gray-700 font-medium rounded-lg text-lg text-left hover:border-[#ED1C24] hover:text-[#ED1C24] focus:outline-none';
+                btn.innerText = isAskCode ? choice.code : choice.name;
+                
+                btn.onclick = () => handleAnswer(btn, choice.code === currentItem.code);
+                choicesContainer.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selectedBtn, isCorrect) {
+            const allBtns = document.querySelectorAll('.btn-choice');
+            allBtns.forEach(btn => btn.disabled = true);
+
+            if (isCorrect) {
+                selectedBtn.classList.add('correct');
+                score++;
+            } else {
+                selectedBtn.classList.add('wrong');
+                const currentItem = currentQuestions[currentQuestionIndex];
+                const correctText = isAskCode ? currentItem.code : currentItem.name;
+                allBtns.forEach(btn => {
+                    if(btn.innerText === correctText) {
+                        btn.classList.add('correct');
+                        btn.classList.remove('border-gray-200', 'text-gray-700');
+                    }
+                });
+            }
+
+            updateHeader();
+
+            // แสดงปุ่มถัดไป แทนการเปลี่ยนข้ออัตโนมัติ
+            document.getElementById('next-button-container').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function updateHeader() {
+            document.getElementById('question-counter').innerText = `ข้อที่ ${currentQuestionIndex + 1}/${currentQuestions.length}`;
+            document.getElementById('score-display').innerText = score;
+        }
+
+        function showResult() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('flex');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            document.getElementById('final-score').innerText = score;
+        }
+
+        function showMenu() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('menu-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
